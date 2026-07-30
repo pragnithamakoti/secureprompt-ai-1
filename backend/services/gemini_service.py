@@ -4,6 +4,7 @@ from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
 
+# Stable Gemini model alias
 GEMINI_MODEL = "gemini-flash-latest"
 
 
@@ -27,6 +28,7 @@ def is_gemini_configured():
 
 def generate_gemini_response_if_safe(prompt: str, prediction: str):
 
+    # Only Safe prompts are forwarded to Gemini
     if prediction != "Safe":
         return {
             "gemini_called": False,
@@ -48,13 +50,6 @@ def generate_gemini_response_if_safe(prompt: str, prediction: str):
     try:
         from google import genai
 
-        print("=" * 60)
-        print("GEMINI DEBUG")
-        print("MODEL:", GEMINI_MODEL)
-        print("API KEY FOUND:", bool(api_key))
-        print("PROMPT:", prompt)
-        print("=" * 60)
-
         client = genai.Client(api_key=api_key)
 
         start = time.time()
@@ -66,23 +61,16 @@ def generate_gemini_response_if_safe(prompt: str, prediction: str):
 
         elapsed = round(time.time() - start, 2)
 
-        print("Gemini Response:", response.text)
-
         return {
             "gemini_called": True,
-            "gemini_response": response.text,
+            "gemini_response": response.text.strip(),
             "gemini_status": "Forwarded",
             "model_used": GEMINI_MODEL,
             "execution_time_seconds": elapsed,
-            "reason": "Gemini request completed successfully."
+            "reason": "Prompt is Safe. Successfully processed by Gemini."
         }
 
     except Exception as e:
-        print("=" * 60)
-        print("GEMINI ERROR")
-        print(str(e))
-        print("=" * 60)
-
         return {
             "gemini_called": False,
             "gemini_response": None,
