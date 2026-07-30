@@ -75,8 +75,6 @@ def classify_prompt_threat(prompt: str) -> dict:
     model, vectorizer = get_ml_components()
     prompt_clean = prompt.strip()
 
-    if not prompt_clean:
-    # Safe programming prompt override
     SAFE_PROGRAMMING_KEYWORDS = [
         "java","python","c++","c#","javascript","typescript","react",
         "spring","spring boot","html","css","sql","mysql","mongodb",
@@ -87,6 +85,7 @@ def classify_prompt_threat(prompt: str) -> dict:
     ]
 
     prompt_lower = prompt_clean.lower()
+
     jailbreak_terms = [
         "ignore previous","ignore all previous","system prompt",
         "developer mode","dan","jailbreak","bypass","override",
@@ -110,6 +109,7 @@ def classify_prompt_threat(prompt: str) -> dict:
             "execution_time_seconds": gemini_info.get("execution_time_seconds", 0.0)
         }
 
+    if not prompt_clean:
         return {
             "prediction": "Safe",
             "confidence": 100.0,
