@@ -5,7 +5,7 @@ from dotenv import load_dotenv, find_dotenv
 # Load .env file automatically
 load_dotenv(find_dotenv())
 
-GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_MODEL = "gemini-2.5-flash-lite"
 
 
 def get_gemini_api_key() -> str:
