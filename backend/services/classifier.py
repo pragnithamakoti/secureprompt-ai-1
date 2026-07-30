@@ -76,6 +76,40 @@ def classify_prompt_threat(prompt: str) -> dict:
     prompt_clean = prompt.strip()
 
     if not prompt_clean:
+    # Safe programming prompt override
+    SAFE_PROGRAMMING_KEYWORDS = [
+        "java","python","c++","c#","javascript","typescript","react",
+        "spring","spring boot","html","css","sql","mysql","mongodb",
+        "node","express","program","code","algorithm","function",
+        "class","object","array","string","reverse a string",
+        "factorial","fibonacci","binary search","sorting","palindrome",
+        "hello world"
+    ]
+
+    prompt_lower = prompt_clean.lower()
+    jailbreak_terms = [
+        "ignore previous","ignore all previous","system prompt",
+        "developer mode","dan","jailbreak","bypass","override",
+        "disable safety","reveal prompt","forget previous"
+    ]
+
+    if any(k in prompt_lower for k in SAFE_PROGRAMMING_KEYWORDS) and not any(t in prompt_lower for t in jailbreak_terms):
+        safe_recommendation = rewrite_to_safe_prompt(prompt_clean, "Safe", "Safe")
+        gemini_info = generate_gemini_response_if_safe(prompt_clean, "Safe")
+        return {
+            "prediction": "Safe",
+            "confidence": 99.9,
+            "attack_category": "Safe",
+            "explanation": "Detected as a normal programming/coding request.",
+            "safe_prompt": safe_recommendation,
+            "gemini_active": is_gemini_configured(),
+            "gemini_called": gemini_info.get("gemini_called", False),
+            "gemini_status": gemini_info.get("gemini_status", "Blocked"),
+            "gemini_response": gemini_info.get("gemini_response", None),
+            "gemini_note": gemini_info.get("reason", ""),
+            "execution_time_seconds": gemini_info.get("execution_time_seconds", 0.0)
+        }
+
         return {
             "prediction": "Safe",
             "confidence": 100.0,
