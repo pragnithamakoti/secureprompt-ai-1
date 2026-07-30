@@ -2,17 +2,13 @@ import os
 import time
 from dotenv import load_dotenv, find_dotenv
 
-# Load .env file automatically
 load_dotenv(find_dotenv())
 
-GEMINI_MODEL = "gemini-2.5-flash-lite"
+GEMINI_MODEL = "gemini-flash-latest"
 
 
-def get_gemini_api_key() -> str:
-    """
-    Retrieves the GEMINI_API_KEY from environment variables.
-    """
-    key = os.environ.get("GEMINI_API_KEY", "").strip()
+def get_gemini_api_key():
+    key = os.getenv("GEMINI_API_KEY", "").strip()
 
     if (
         not key
@@ -25,28 +21,18 @@ def get_gemini_api_key() -> str:
     return key
 
 
-def is_gemini_configured() -> bool:
-    """
-    Returns True if a valid GEMINI_API_KEY is present.
-    """
+def is_gemini_configured():
     return bool(get_gemini_api_key())
 
 
-def generate_gemini_response_if_safe(prompt: str, prediction: str) -> dict:
-    """
-    If prediction == Safe:
-        Forward prompt to Gemini.
-
-    Otherwise:
-        Block Gemini call.
-    """
+def generate_gemini_response_if_safe(prompt: str, prediction: str):
 
     if prediction != "Safe":
         return {
             "gemini_called": False,
             "gemini_response": None,
             "gemini_status": "Blocked",
-            "reason": f"Blocked: Prompt classified as '{prediction}'. Gemini API call prevented for safety."
+            "reason": f"Blocked because prediction is '{prediction}'."
         }
 
     api_key = get_gemini_api_key()
@@ -56,47 +42,50 @@ def generate_gemini_response_if_safe(prompt: str, prediction: str) -> dict:
             "gemini_called": False,
             "gemini_response": None,
             "gemini_status": "Not Configured",
-            "reason": "Gemini API key not configured."
+            "reason": "Gemini API key missing."
         }
 
-    max_retries = 2
+    try:
+        from google import genai
 
-    for attempt in range(max_retries):
-        try:
-            from google import genai
+        print("=" * 60)
+        print("GEMINI DEBUG")
+        print("MODEL:", GEMINI_MODEL)
+        print("API KEY FOUND:", bool(api_key))
+        print("PROMPT:", prompt)
+        print("=" * 60)
 
-            client = genai.Client(api_key=api_key)
+        client = genai.Client(api_key=api_key)
 
-            start_time = time.time()
+        start = time.time()
 
-            response = client.models.generate_content(
-                model=GEMINI_MODEL,
-                contents=prompt,
-            )
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=prompt
+        )
 
-            elapsed = round(time.time() - start_time, 2)
+        elapsed = round(time.time() - start, 2)
 
-            return {
-                "gemini_called": True,
-                "gemini_response": response.text.strip(),
-                "gemini_status": "Forwarded",
-                "model_used": GEMINI_MODEL,
-                "execution_time_seconds": elapsed,
-                "reason": "Prompt is Safe. Successfully processed by Gemini."
-            }
+        print("Gemini Response:", response.text)
 
-        except Exception as e:
+        return {
+            "gemini_called": True,
+            "gemini_response": response.text,
+            "gemini_status": "Forwarded",
+            "model_used": GEMINI_MODEL,
+            "execution_time_seconds": elapsed,
+            "reason": "Gemini request completed successfully."
+        }
 
-            error_msg = str(e)
+    except Exception as e:
+        print("=" * 60)
+        print("GEMINI ERROR")
+        print(str(e))
+        print("=" * 60)
 
-            print(f"[Gemini Attempt {attempt + 1}] {error_msg}")
-
-            if attempt < max_retries - 1:
-                time.sleep(1)
-            else:
-                return {
-                    "gemini_called": False,
-                    "gemini_response": None,
-                    "gemini_status": "Error",
-                    "reason": f"Gemini API execution error: {error_msg}"
-                }
+        return {
+            "gemini_called": False,
+            "gemini_response": None,
+            "gemini_status": "Error",
+            "reason": str(e)
+        }
