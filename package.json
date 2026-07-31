@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "description": "SecurePrompt AI: An Intelligent LLM Jailbreak Detection, Threat Analysis, and Safe Prompt Recommendation Platform",
   "scripts": {
-    "dev": "cd firebase/frontend && npm run dev",
-    "dev:frontend": "cd firebase/frontend && npm run dev",
-    "build:frontend": "cd firebase/frontend && npm run build",
+    "build": "cd frontend && npm install && npm run build",
+    "dev": "cd frontend && npm run dev",
     "start:backend": "python backend/app.py",
     "train:model": "python backend/train.py"
   },
